@@ -52,8 +52,8 @@ export function ImageGrid({
     };
 
     updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
   const breakpointColumns = {
@@ -64,28 +64,38 @@ export function ImageGrid({
 
   // Filter images based on selected gallery type and tags
   const filteredImages = images.filter((image) => {
-    const matchesGalleryType = !selectedGalleryType || image.gallery_type === selectedGalleryType;
-    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => image.tags?.includes(tag));
+    const matchesGalleryType =
+      !selectedGalleryType.id ||
+      image.gallery_type_id === selectedGalleryType.id;
+    const matchesTags =
+      selectedTags.length === 0 ||
+      selectedTags.some((tag) => image.tags?.includes(tag));
     return matchesGalleryType && matchesTags;
   });
 
   // Calculate tag counts for current gallery type
   const tagCounts = tags.reduce((acc, tag) => {
-    const count = images.filter(image => 
-      (!selectedGalleryType || image.gallery_type === selectedGalleryType) && 
-      image.tags?.includes(tag)
+    const count = images.filter(
+      (image) =>
+        (!selectedGalleryType.id ||
+          image.gallery_type_id === selectedGalleryType.id) &&
+        image.tags?.includes(tag)
     ).length;
     acc[tag] = count;
     return acc;
   }, {} as Record<string, number>);
 
   // Calculate total images count for "All" tag
-  const allTagsCount = images.filter(image => 
-    !selectedGalleryType || image.gallery_type === selectedGalleryType
+  const allTagsCount = images.filter(
+    (image) =>
+      !selectedGalleryType.id ||
+      image.gallery_type_id === selectedGalleryType.id
   ).length;
 
   // Calculate column width
-  const columnWidth = Math.floor((containerWidth - (columnCount - 1) * 16) / columnCount);
+  const columnWidth = Math.floor(
+    (containerWidth - (columnCount - 1) * 16) / columnCount
+  );
 
   // Arrange images into columns manually
   const columns = Array.from({ length: columnCount }, () => []);
@@ -116,7 +126,7 @@ export function ImageGrid({
               key={tag}
               onClick={() => {
                 if (selectedTags.includes(tag)) {
-                  onSelectTags(selectedTags.filter(t => t !== tag));
+                  onSelectTags(selectedTags.filter((t) => t !== tag));
                 } else {
                   onSelectTags([...selectedTags, tag]);
                 }
@@ -173,7 +183,7 @@ export function ImageGrid({
                   <div
                     key={image.id}
                     className="mb-4 relative group overflow-hidden rounded-lg"
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                     onClick={() => {
                       setImageUrl(image.url);
                       setIsOpen(true);

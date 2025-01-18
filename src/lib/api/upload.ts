@@ -4,8 +4,7 @@ import type { GalleryImage } from "../../types";
 
 export async function uploadImage(
   file: File,
-  displayOrder: number,
-  selectedGalleryType: string | null
+  selected_gallery_id: string
 ): Promise<GalleryImage> {
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
@@ -20,7 +19,7 @@ export async function uploadImage(
       .upload(fileName, file);
 
     if (uploadError) {
-      console.error('Storage upload error:', uploadError);
+      console.error("Storage upload error:", uploadError);
       throw uploadError;
     }
 
@@ -38,22 +37,23 @@ export async function uploadImage(
         url: publicUrl,
         width: 800,
         height: 600,
-        display_order: displayOrder,
-        gallery_type: selectedGalleryType, // Use the gallery type directly
+        gallery_type_id: selected_gallery_id, // Use the gallery type directly
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .select(`
+      .select(
+        `
         *,
         gallery_types (
           id,
           name
         )
-      `)
+      `
+      )
       .single();
 
     if (insertError) {
-      console.error('Database insert error:', insertError);
+      console.error("Database insert error:", insertError);
       throw insertError;
     }
 
@@ -75,12 +75,11 @@ export async function uploadImage(
 
 export async function uploadMultipleImages(
   files: FileList,
-  startOrder: number,
-  selectedGalleryType: string | null = null
+  selected_gallery_id: string
 ): Promise<GalleryImage[]> {
   try {
     const uploadPromises = Array.from(files).map((file, index) =>
-      uploadImage(file, startOrder + index, selectedGalleryType)
+      uploadImage(file, selected_gallery_id)
     );
 
     return await Promise.all(uploadPromises);
