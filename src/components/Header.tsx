@@ -4,9 +4,9 @@ import { Image, Heart } from 'lucide-react';
 
 interface HeaderProps {
   wishlistCount: number;
-  galleryTypes: string[];
-  selectedGalleryType: string | null;
-  onSelectGalleryType: (type: string | null) => void;
+  galleryTypes: Array<{ id: string; name: string }>;
+  selectedGalleryType: { id: string; name: string } | null;
+  onSelectGalleryType: (type: { id: string; name: string } | null) => void;
 }
 
 export function Header({ 
@@ -30,15 +30,15 @@ export function Header({
           <div className="flex items-center gap-4">
             {galleryTypes.map((type) => (
               <button
-                key={type}
+                key={type.id}
                 onClick={() => onSelectGalleryType(type)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  selectedGalleryType === type
+                  selectedGalleryType?.id === type.id
                     ? "bg-purple-600 text-white"
                     : "text-gray-400 hover:text-gray-300"
                 }`}
               >
-                {type}
+                {type.name}
               </button>
             ))}
           </div>

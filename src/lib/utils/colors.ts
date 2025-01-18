@@ -1,5 +1,5 @@
 // Array of tailwind color classes for tags
-export const TAG_COLORS = [
+const TAG_COLORS = [
   'bg-red-500/20 text-red-300',
   'bg-orange-500/20 text-orange-300',
   'bg-amber-500/20 text-amber-300',
@@ -19,13 +19,10 @@ export const TAG_COLORS = [
   'bg-rose-500/20 text-rose-300'
 ];
 
-// Get a random color class from the array
-export function getRandomTagColor(): string {
-  return TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)];
-}
-
 // Get a consistent color for a given string (same tag always gets same color)
 export function getTagColor(tag: string): string {
-  const index = tag.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return TAG_COLORS[index % TAG_COLORS.length];
+  const hash = tag.split('').reduce((acc, char) => {
+    return acc + char.charCodeAt(0);
+  }, 0);
+  return TAG_COLORS[hash % TAG_COLORS.length];
 }

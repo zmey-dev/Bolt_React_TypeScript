@@ -18,9 +18,7 @@ async function retryWithBackoff<T>(
   }
 }
 
-export async function getTags(
-  galleryTypeId?: string | null
-): Promise<string[]> {
+export async function getTags(galleryTypeId?: string | null): Promise<string[]> {
   const supabase = await getSupabaseClient();
   if (!supabase) {
     console.warn("Supabase client not initialized");
@@ -31,6 +29,7 @@ export async function getTags(
     return await retryWithBackoff(async () => {
       let query = supabase.from(TABLES.TAGS).select("id, name").order("name");
 
+      // Only add the gallery type filter if a valid ID is provided
       if (galleryTypeId) {
         query = query.eq("gallery_type_id", galleryTypeId);
       }
@@ -38,7 +37,7 @@ export async function getTags(
       const { data, error } = await query;
 
       if (error) throw error;
-      return data?.map((tag) => tag.name) || [];
+      return (data || []).map((tag) => tag.name);
     });
   } catch (error) {
     console.error("Error fetching tags:", error);
@@ -46,10 +45,7 @@ export async function getTags(
   }
 }
 
-export async function createTag(
-  name: string,
-  galleryTypeId: string
-): Promise<void> {
+export async function createTag(name: string, galleryTypeId: string): Promise<void> {
   const supabase = await getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
 
@@ -80,7 +76,7 @@ export async function createTag(
   }
 }
 
-export async function deleteTag(tag_id: string): Promise<void> {
+export async function deleteTag(tagId: string): Promise<void> {
   const supabase = await getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
 
@@ -90,7 +86,7 @@ export async function deleteTag(tag_id: string): Promise<void> {
       const { error: unlinkError } = await supabase
         .from(TABLES.IMAGE_TAGS)
         .delete()
-        .eq("tag_id", tag_id);
+        .eq("tag_id", tagId);
 
       if (unlinkError) throw unlinkError;
 
@@ -98,7 +94,7 @@ export async function deleteTag(tag_id: string): Promise<void> {
       const { error: deleteError } = await supabase
         .from(TABLES.TAGS)
         .delete()
-        .eq("id", tag_id);
+        .eq("id", tagId);
 
       if (deleteError) throw deleteError;
     });
@@ -112,7 +108,7 @@ export async function updateImageTags(
   imageId: string,
   tags: string[],
   galleryTypeId: string
-) {
+): Promise<void> {
   const supabase = await getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
 
@@ -176,8 +172,6 @@ export async function updateImageTags(
           }
         }
       }
-
-      return true;
     });
   } catch (error) {
     console.error("Error updating image tags:", error);

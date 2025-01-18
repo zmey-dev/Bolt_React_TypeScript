@@ -41,16 +41,11 @@ export function TagManager({
   const handleDeleteTag = async (tagName: string) => {
     if (!selectedGalleryTypeId || !confirm(`Are you sure you want to delete the tag "${tagName}"?`)) return;
 
-    setIsLoading(true);
-    setError(null);
-
     try {
-      await deleteTag(tagName, selectedGalleryTypeId);
+      await deleteTag(tagName);
       onTagsChange();
     } catch (err) {
       setError('Failed to delete tag');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -106,7 +101,7 @@ export function TagManager({
               onClick={() => handleDeleteTag(tag)}
               className="text-gray-400 hover:text-red-400 transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3" />
             </button>
           </span>
         ))}

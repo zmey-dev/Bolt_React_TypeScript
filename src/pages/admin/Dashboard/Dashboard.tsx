@@ -10,20 +10,29 @@ import {
   Check,
   X,
 } from "lucide-react";
-import { AdminNav } from "../../components/AdminNav";
-import { loadGalleryImages, getGalleryTypes, createGallery } from "../../lib/api/gallery";
-import { getTags, createTag, deleteTag } from "../../lib/api/tags";
-import { getSupabaseClient } from "../../lib/supabase";
-import { uploadMultipleImages } from "../../lib/api/upload";
-import { getTagColor } from "../../lib/utils/colors";
-import type { GalleryImage } from "../../types";
+import { AdminNav } from "../../../components/AdminNav";
+import {
+  loadGalleryImages,
+  getGalleryTypes,
+  createGallery,
+} from "../../../lib/api/gallery";
+import { getTags, createTag, deleteTag } from "../../../lib/api/tags";
+import { getSupabaseClient } from "../../../lib/supabase";
+import { uploadMultipleImages } from "../../../lib/api/upload";
+import { deleteImages } from "../../../lib/api/images";
+import { getTagColor } from "../../../lib/utils/colors";
+import type { GalleryImage } from "../../../types";
 
-// Change to named export
-export default function Dashboard() {
+export function Dashboard() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [galleries, setGalleries] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedGallery, setSelectedGallery] = useState<{ id: string; name: string } | null>(null);
+  const [galleries, setGalleries] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
+  const [selectedGallery, setSelectedGallery] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -47,11 +56,12 @@ export default function Dashboard() {
         getGalleryTypes(),
         supabase
           .from("tags")
-          .select("id, name, gallery_type_id")
+          .select("id, name")
           .eq("gallery_type_id", selectedGallery?.id)
           .order("name")
           .then(({ data }) => data || []),
       ]);
+
       setImages(imagesData);
       setGalleries(typesData);
       setTagData(tagsData);
@@ -122,7 +132,8 @@ export default function Dashboard() {
       setUploading(false);
     }
   };
-const handleImageSelect = (id: string) => {
+
+  const handleImageSelect = (id: string) => {
     setSelectedImages((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -138,8 +149,6 @@ const handleImageSelect = (id: string) => {
     if (!selectedImages.size) return;
     if (!confirm(`Delete ${selectedImages.size} selected images?`)) return;
     try {
-      // Implement bulk delete logic here
-
       await deleteImages(Array.from(selectedImages));
       await loadData();
       setSelectedImages(new Set());
@@ -147,6 +156,7 @@ const handleImageSelect = (id: string) => {
       setError("Failed to delete images");
     }
   };
+
   return (
     <div className="min-h-screen bg-[#0F1419]">
       <AdminNav />
@@ -154,13 +164,24 @@ const handleImageSelect = (id: string) => {
         <div className="flex gap-6">
           {/* Sidebar */}
           <div className="w-64 flex-shrink-0">
-            <button
-              onClick={() => setIsCreatingGallery(true)}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg mb-6"
-            >
-              <Plus className="w-4 h-4" />
-              Create New Gallery
-            </button>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newGalleryName}
+                  onChange={(e) => setNewGalleryName(e.target.value)}
+                  placeholder="New gallery name..."
+                  className="flex-1 bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={handleCreateGallery}
+                  disabled={!newGalleryName.trim() || isCreatingGallery}
+                  className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white p-2 rounded-lg"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
 
             <h3 className="text-gray-400 text-sm font-medium mb-2">Galleries</h3>
             <div className="space-y-1">
@@ -254,7 +275,8 @@ const handleImageSelect = (id: string) => {
                     ))}
                   </div>
                 </div>
-{selectedImages.size > 0 && (
+
+                {selectedImages.size > 0 && (
                   <div className="flex items-center gap-4 mb-4">
                     <button
                       onClick={() => setSelectedImages(new Set())}
@@ -281,6 +303,7 @@ const handleImageSelect = (id: string) => {
                     </button>
                   </div>
                 )}
+
                 {/* Image Grid */}
                 <div className="grid grid-cols-3 gap-4">
                   {images
@@ -304,17 +327,7 @@ const handleImageSelect = (id: string) => {
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="absolute top-2 right-2">
                             <button
-                              onClick={() =>
-                                setSelectedImages((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(image.id)) {
-                                    next.delete(image.id);
-                                  } else {
-                                    next.add(image.id);
-                                  }
-                                  return next;
-                                })
-                              }
+                              onClick={() => handleImageSelect(image.id)}
                               className={`p-1 rounded-lg ${
                                 selectedImages.has(image.id)
                                   ? "bg-purple-600 text-white"
