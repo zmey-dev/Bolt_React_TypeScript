@@ -26,20 +26,29 @@ export async function assign_tags_to_images(
   const supabase = getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
 
-  console.log("Assigning tags to images:", { image_ids, tag_ids });
-
   try {
-    // Create an array of records to insert
-    const records = image_ids.flatMap((image_id) =>
+    // Log the input data to confirm it's being passed correctly
+    console.log("Assigning tags to images:", { image_ids, tag_ids });
+
+    // Create an array of rows to insert
+    const rows = image_ids.flatMap((image_id) =>
       tag_ids.map((tag_id) => ({ image_id, tag_id }))
     );
 
-    // Perform a bulk insert
-    const { error } = await supabase.from(TABLES.IMAGE_TAGS).insert(records);
+    // Log the rows being inserted
+    console.log("Rows to insert into image_tags table:", rows);
 
-    if (error) throw error;
+    // Insert all rows in a single batch
+    const { data, error } = await supabase
+      .from(TABLES.IMAGE_TAGS)
+      .insert(rows);
 
-    console.log("Tags assigned to images successfully.");
+    // Log the Supabase response
+    if (error) {
+      console.error("Supabase error:", error);
+      throw error;
+    }
+    console.log("Tags assigned successfully:", data);
   } catch (error) {
     console.error("Error assigning tags to images:", error);
     throw error;

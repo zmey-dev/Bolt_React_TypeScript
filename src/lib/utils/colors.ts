@@ -1,28 +1,51 @@
-// Array of tailwind color classes for tags
+// Expanded color palette
 const TAG_COLORS = [
-  'bg-red-500/20 text-red-300',
-  'bg-orange-500/20 text-orange-300',
-  'bg-amber-500/20 text-amber-300',
-  'bg-yellow-500/20 text-yellow-300',
-  'bg-lime-500/20 text-lime-300',
-  'bg-green-500/20 text-green-300',
-  'bg-emerald-500/20 text-emerald-300',
-  'bg-teal-500/20 text-teal-300',
-  'bg-cyan-500/20 text-cyan-300',
-  'bg-sky-500/20 text-sky-300',
-  'bg-blue-500/20 text-blue-300',
-  'bg-indigo-500/20 text-indigo-300',
-  'bg-violet-500/20 text-violet-300',
-  'bg-purple-500/20 text-purple-300',
-  'bg-fuchsia-500/20 text-fuchsia-300',
-  'bg-pink-500/20 text-pink-300',
-  'bg-rose-500/20 text-rose-300'
+  'bg-red-500 text-red-100',
+  'bg-red-600 text-red-100',
+  'bg-orange-500 text-orange-100',
+  'bg-orange-600 text-orange-100',
+  'bg-amber-500 text-amber-100',
+  'bg-amber-600 text-amber-100',
+  'bg-yellow-500 text-yellow-100',
+  'bg-yellow-600 text-yellow-100',
+  'bg-lime-500 text-lime-100',
+  'bg-lime-600 text-lime-100',
+  'bg-green-500 text-green-100',
+  'bg-green-600 text-green-100',
+  'bg-emerald-500 text-emerald-100',
+  'bg-emerald-600 text-emerald-100',
+  'bg-teal-500 text-teal-100',
+  'bg-teal-600 text-teal-100',
+  'bg-cyan-500 text-cyan-100',
+  'bg-cyan-600 text-cyan-100',
+  'bg-sky-500 text-sky-100',
+  'bg-sky-600 text-sky-100',
+  'bg-blue-500 text-blue-100',
+  'bg-blue-600 text-blue-100',
+  'bg-indigo-500 text-indigo-100',
+  'bg-indigo-600 text-indigo-100',
+  'bg-violet-500 text-violet-100',
+  'bg-violet-600 text-violet-100',
+  'bg-purple-500 text-purple-100',
+  'bg-purple-600 text-purple-100',
+  'bg-fuchsia-500 text-fuchsia-100',
+  'bg-fuchsia-600 text-fuchsia-100',
+  'bg-pink-500 text-pink-100',
+  'bg-pink-600 text-pink-100',
+  'bg-rose-500 text-rose-100',
+  'bg-rose-600 text-rose-100'
 ];
 
-// Get a consistent color for a given string (same tag always gets same color)
+// Improved hashing function (djb2)
+function hashString(str: string): number {
+  let hash = 5381; // Initial hash value
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33) ^ str.charCodeAt(i); // XOR and multiply by a prime number
+  }
+  return hash >>> 0; // Ensure the hash is a non-negative integer
+}
+
 export function getTagColor(tag: string): string {
-  const hash = tag.split('').reduce((acc, char) => {
-    return acc + char.charCodeAt(0);
-  }, 0);
+  const hash = hashString(tag);
   return TAG_COLORS[hash % TAG_COLORS.length];
 }

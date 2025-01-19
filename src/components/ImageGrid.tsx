@@ -113,7 +113,7 @@ export function ImageGrid({
 
           {tags.map((tag) => (
             <button
-              key={tag}
+              key={`tag-${tag}`}
               onClick={() => {
                 if (selectedTags.includes(tag)) {
                   onSelectTags(selectedTags.filter(t => t !== tag));
@@ -166,12 +166,12 @@ export function ImageGrid({
       ) : (
         <div className="flex gap-4">
           {columns.map((column, columnIndex) => (
-            <div key={columnIndex} className="flex-1">
+            <div key={`column-${columnIndex}`} className="flex-1">
               {column.map((image) => {
                 const isInWishlist = wishlistIds.includes(image.id);
                 return (
                   <div
-                    key={image.id}
+                    key={`image-${image.id}`}
                     className="mb-4 relative group overflow-hidden rounded-lg"
                     style={{ width: '100%' }}
                     onClick={() => {
