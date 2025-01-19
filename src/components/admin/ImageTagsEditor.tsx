@@ -2,8 +2,8 @@ import React from "react";
 import { Tag, Plus, X } from "lucide-react";
 
 interface ImageTagsEditorProps {
-  tags: string[];
-  selectedTags: string[];
+  tags: Array<{ id: string; name: string }>;
+  selectedTags: Array<{ id: string; name: string }>;
   onAddTag: (tag: string) => void;
   onRemoveTag: (tag: string) => void;
   onClose: () => void;
@@ -16,7 +16,10 @@ export function ImageTagsEditor({
   onRemoveTag,
   onClose,
 }: ImageTagsEditorProps) {
-  const availableTags = tags.filter((tag) => !selectedTags.includes(tag));
+  const availableTags = tags.filter(
+    (tag) =>
+      !selectedTags.filter((selectedTag) => selectedTag.id == tag.id).length
+  );
 
   return (
     <div className="p-4 space-y-4">
@@ -34,10 +37,10 @@ export function ImageTagsEditor({
         <div className="flex flex-wrap gap-2">
           {selectedTags.map((tag) => (
             <span
-              key={tag}
+              key={tag.id}
               className="flex items-center gap-1 bg-purple-600/30 text-purple-300 px-2 py-1 rounded-lg text-sm"
             >
-              {tag}
+              {tag.name}
               <button
                 onClick={() => onRemoveTag(tag)}
                 className="hover:text-white"
@@ -54,12 +57,12 @@ export function ImageTagsEditor({
             <div className="flex flex-wrap gap-2">
               {availableTags.map((tag) => (
                 <button
-                  key={tag}
+                  key={tag.id}
                   onClick={() => onAddTag(tag)}
                   className="flex items-center gap-1 bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded-lg text-sm text-gray-300 hover:text-white transition-colors"
                 >
                   <Plus className="w-3 h-3" />
-                  {tag}
+                  {tag.name}
                 </button>
               ))}
             </div>

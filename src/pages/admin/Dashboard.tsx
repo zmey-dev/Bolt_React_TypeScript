@@ -11,27 +11,45 @@ import {
   X,
 } from "lucide-react";
 import { AdminNav } from "../../components/AdminNav";
-import { loadGalleryImages, getGalleryTypes, createGallery } from "../../lib/api/gallery";
+import {
+  loadGalleryImages,
+  getGalleryTypes,
+  createGallery,
+} from "../../lib/api/gallery";
 import { getTags, createTag, deleteTag } from "../../lib/api/tags";
 import { getSupabaseClient } from "../../lib/supabase";
 import { uploadMultipleImages } from "../../lib/api/upload";
 import { getTagColor } from "../../lib/utils/colors";
 import type { GalleryImage } from "../../types";
+import { Modal } from "../../components/Modal";
+import { ImageTagsEditor } from "../../components/admin/ImageTagsEditor";
+import { div } from "framer-motion/client";
+import { assign_tags_to_images, deleteImages } from "../../lib/api/images";
+import { GalleryItem } from "../../components/GalleryItem";
 
 // Change to named export
 export default function Dashboard() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [galleries, setGalleries] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedGallery, setSelectedGallery] = useState<{ id: string; name: string } | null>(null);
+  const [galleries, setGalleries] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [selectedGallery, setSelectedGallery] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [selectedTagIds, setSelectedTagIds] = useState<Array<string>>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
   const [isCreatingGallery, setIsCreatingGallery] = useState(false);
+  const [isShowAssignModal, setIsShowAssignModal] = useState(false);
   const [newGalleryName, setNewGalleryName] = useState("");
-  const [tagData, setTagData] = useState<Array<{ id: string; name: string }>>([]);
+  const [tagData, setTagData] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
 
   const loadData = useCallback(async () => {
     try {
@@ -45,16 +63,21 @@ export default function Dashboard() {
       const [imagesData, typesData, tagsData] = await Promise.all([
         loadGalleryImages(),
         getGalleryTypes(),
-        supabase
-          .from("tags")
-          .select("id, name, gallery_type_id")
-          .eq("gallery_type_id", selectedGallery?.id)
-          .order("name")
-          .then(({ data }) => data || []),
+        (async () => {
+          let query = supabase.from("tags").select("id, name, gallery_type_id");
+
+          if (selectedGallery?.id) {
+            query = query.eq("gallery_type_id", selectedGallery.id);
+          }
+
+          const { data } = await query.order("name");
+          return data || [];
+        })(),
       ]);
       setImages(imagesData);
       setGalleries(typesData);
       setTagData(tagsData);
+      setSelectedImages(null);
       setTags(tagsData.map((t) => t.name));
     } catch (err) {
       console.error("Error loading data:", err);
@@ -122,7 +145,7 @@ export default function Dashboard() {
       setUploading(false);
     }
   };
-const handleImageSelect = (id: string) => {
+  const handleImageSelect = (id: string) => {
     setSelectedImages((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -134,12 +157,14 @@ const handleImageSelect = (id: string) => {
     });
   };
 
+  const onAssignTags = (image_ids: Array<string>, tag_ids: Array<string>) => {
+    assign_tags_to_images(image_ids, tag_ids);
+  };
+
   const handleBulkDelete = async () => {
     if (!selectedImages.size) return;
     if (!confirm(`Delete ${selectedImages.size} selected images?`)) return;
     try {
-      // Implement bulk delete logic here
-
       await deleteImages(Array.from(selectedImages));
       await loadData();
       setSelectedImages(new Set());
@@ -147,8 +172,91 @@ const handleImageSelect = (id: string) => {
       setError("Failed to delete images");
     }
   };
+
+  const onSelectTags = (e) => {
+    if (selectedTagIds.includes(e.target.value))
+      setSelectedTagIds(selectedTagIds.filter((id) => id != e.target.value));
+    else setSelectedTagIds([...selectedTagIds, e.target.value]);
+  };
+
   return (
     <div className="min-h-screen bg-[#0F1419]">
+      <Modal
+        onClose={() => setIsCreatingGallery(false)}
+        isOpen={isCreatingGallery}
+        title="Create New Gallery"
+      >
+        {/* <hr className="w-full text-white" /> */}
+        <span className="w-full ">Gallery Name</span>
+
+        <input
+          type="text"
+          value={newGalleryName}
+          onChange={(e) => setNewGalleryName(e.target.value)}
+          placeholder="New gallery name"
+          className="bg-gray-800 w-full my-2 py-2 focus:border-blue-500 text-white border border-gray-700 rounded-lg"
+        />
+        <div className="w-full flex">
+          <button
+            className="ml-auto bg-gray-700 px-4 py-2 rounded-lg"
+            onClick={() => {
+              setNewGalleryName("");
+              setIsCreatingGallery(false);
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            className="ml-2 bg-blue-500 px-4 py-2 rounded-lg"
+            onClick={() => {
+              handleCreateGallery();
+            }}
+          >
+            Create Gallery
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isShowAssignModal}
+        onClose={() => setIsShowAssignModal(false)}
+        title="Assign Image Tag Modal"
+      >
+        <div className="flex flex-col">
+          {tagData.map((tag) => (
+            <div key={tag.id}>
+              <input
+                type="checkbox"
+                value={tag.id}
+                onChange={onSelectTags}
+                checked={selectedTagIds.includes(tag.id)}
+                key={tag.id}
+                className="pr-4 text-lg w-6 h-4"
+              />
+              <span className="text-lg">{tag.name}</span>
+            </div>
+          ))}
+          <div className="flex space-x-2">
+            <button
+              className="bg-green-500 w-full h-10 rounded-lg"
+              onClick={() => {
+                onAssignTags(Array.from(selectedImages), selectedTagIds);
+                setIsShowAssignModal(false);
+              }}
+            >
+              Add
+            </button>
+            <button
+              className="bg-red-500 w-full h-10 rounded-lg"
+              onClick={() => {
+                setIsShowAssignModal(false);
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      </Modal>
       <AdminNav />
       <div className="max-w-[1400px] mx-auto p-6">
         <div className="flex gap-6">
@@ -162,20 +270,17 @@ const handleImageSelect = (id: string) => {
               Create New Gallery
             </button>
 
-            <h3 className="text-gray-400 text-sm font-medium mb-2">Galleries</h3>
+            <h3 className="text-gray-400 text-sm font-medium mb-2">
+              Galleries
+            </h3>
             <div className="space-y-1">
               {galleries.map((gallery) => (
-                <button
+                <GalleryItem
                   key={gallery.id}
-                  onClick={() => setSelectedGallery(gallery)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                    selectedGallery?.id === gallery.id
-                      ? "bg-purple-600 text-white"
-                      : "text-gray-300 hover:bg-gray-800"
-                  }`}
-                >
-                  {gallery.name}
-                </button>
+                  gallery={gallery}
+                  isSelected={selectedGallery?.id == gallery?.id}
+                  setSelectedGallery={setSelectedGallery}
+                />
               ))}
             </div>
           </div>
@@ -189,7 +294,9 @@ const handleImageSelect = (id: string) => {
                     {selectedGallery.name}
                   </h1>
                   <button
-                    onClick={() => document.getElementById("file-upload")?.click()}
+                    onClick={() =>
+                      document.getElementById("file-upload")?.click()
+                    }
                     className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
                     disabled={uploading}
                   >
@@ -217,7 +324,9 @@ const handleImageSelect = (id: string) => {
 
                 {/* Quick Add Tags */}
                 <div className="bg-[#1A1F25] rounded-lg p-4 mb-6">
-                  <h3 className="text-white font-medium mb-4">Quick Add Tags</h3>
+                  <h3 className="text-white font-medium mb-4">
+                    Quick Add Tags
+                  </h3>
                   <div className="flex gap-2 mb-4">
                     <input
                       type="text"
@@ -254,7 +363,7 @@ const handleImageSelect = (id: string) => {
                     ))}
                   </div>
                 </div>
-{selectedImages.size > 0 && (
+                {selectedImages?.size > 0 && (
                   <div className="flex items-center gap-4 mb-4">
                     <button
                       onClick={() => setSelectedImages(new Set())}
@@ -265,7 +374,7 @@ const handleImageSelect = (id: string) => {
                     </button>
                     <button
                       onClick={() => {
-                        /* Implement assign tags */
+                        setIsShowAssignModal(true);
                       }}
                       className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                     >
@@ -284,14 +393,12 @@ const handleImageSelect = (id: string) => {
                 {/* Image Grid */}
                 <div className="grid grid-cols-3 gap-4">
                   {images
-                    .filter(
-                      (img) => img.gallery_type_id === selectedGallery.id
-                    )
+                    .filter((img) => img.gallery_type_id === selectedGallery.id)
                     .map((image) => (
                       <div
                         key={image.id}
                         className={`relative group rounded-lg overflow-hidden ${
-                          selectedImages.has(image.id)
+                          selectedImages?.has(image.id)
                             ? "ring-2 ring-purple-500"
                             : ""
                         }`}
@@ -316,7 +423,7 @@ const handleImageSelect = (id: string) => {
                                 })
                               }
                               className={`p-1 rounded-lg ${
-                                selectedImages.has(image.id)
+                                selectedImages?.has(image.id)
                                   ? "bg-purple-600 text-white"
                                   : "bg-gray-800 text-gray-300"
                               }`}
