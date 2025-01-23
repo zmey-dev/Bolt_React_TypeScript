@@ -24,7 +24,7 @@ async function retryWithBackoff<T>(
 export async function submitQuoteRequest(data: QuoteRequest): Promise<string> {
   const supabase = await getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
-
+  
   // Get access code details if provided
   let affiliateId = null;
   if (window.access_code) {
@@ -65,16 +65,16 @@ export async function submitQuoteRequest(data: QuoteRequest): Promise<string> {
         const { error: imagesError } = await supabase
           .from("quote_request_images")
           .insert(
-            data.selectedImages.map((item) => ({
+            data.selectedImages.map(item => ({
               quote_request_id: quote.id,
               image_id: item.image_id,
               notes: item.notes || "",
-              url: item.isCustomUpload ? item.url : null,
+              url: item.isCustomUpload ? item.url : null
             }))
           );
 
         if (imagesError) {
-          console.warn("Failed to associate images:", imagesError);
+          console.warn('Failed to associate images:', imagesError);
           // Continue anyway - don't fail the quote submission
         }
       }
