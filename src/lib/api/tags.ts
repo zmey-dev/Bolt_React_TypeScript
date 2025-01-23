@@ -18,7 +18,9 @@ async function retryWithBackoff<T>(
   }
 }
 
-export async function getTags(galleryTypeId?: string | null): Promise<string[]> {
+export async function getTags(
+  galleryTypeId?: string | null
+): Promise<string[]> {
   const supabase = await getSupabaseClient();
   if (!supabase) {
     console.warn("Supabase client not initialized");
@@ -27,7 +29,10 @@ export async function getTags(galleryTypeId?: string | null): Promise<string[]> 
 
   try {
     return await retryWithBackoff(async () => {
-      let query = supabase.from(TABLES.TAGS).select("id, name").order("name");
+      let query = supabase
+        .from(TABLES.TAGS)
+        .select("id, name, gallery_type_id")
+        .order("name");
 
       // Only add the gallery type filter if a valid ID is provided
       if (galleryTypeId) {
@@ -37,7 +42,7 @@ export async function getTags(galleryTypeId?: string | null): Promise<string[]> 
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data || []).map((tag) => tag.name);
+      return data || [];
     });
   } catch (error) {
     console.error("Error fetching tags:", error);
@@ -45,7 +50,10 @@ export async function getTags(galleryTypeId?: string | null): Promise<string[]> 
   }
 }
 
-export async function createTag(name: string, galleryTypeId: string): Promise<void> {
+export async function createTag(
+  name: string,
+  galleryTypeId: string
+): Promise<void> {
   const supabase = await getSupabaseClient();
   if (!supabase) throw new Error("Supabase client not initialized");
 

@@ -24,14 +24,23 @@ import type { GalleryImage } from "../../types";
 import { Modal } from "../../components/Modal";
 import { ImageTagsEditor } from "../../components/admin/ImageTagsEditor";
 import { div } from "framer-motion/client";
-import { assign_tags_to_images, deleteImages } from "../../lib/api/images";
+import {
+  assign_tags_to_images,
+  deleteImages,
+  remove_tags_from_images,
+} from "../../lib/api/images";
 import { GalleryItem } from "../../components/GalleryItem";
 
 export default function Dashboard() {
   const [images, setImages] = useState<GalleryImage[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [galleries, setGalleries] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedGallery, setSelectedGallery] = useState<{ id: string; name: string } | null>(null);
+
+  const [galleries, setGalleries] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [selectedGallery, setSelectedGallery] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectedTagIds, setSelectedTagIds] = useState<Array<string>>([]);
   const [loading, setLoading] = useState(true);
@@ -41,10 +50,16 @@ export default function Dashboard() {
   const [isCreatingGallery, setIsCreatingGallery] = useState(false);
   const [isShowAssignModal, setIsShowAssignModal] = useState(false);
   const [newGalleryName, setNewGalleryName] = useState("");
-  const [tagData, setTagData] = useState<Array<{ id: string; name: string }>>([]);
+  const [tagData, setTagData] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
   const [isAssigningTags, setIsAssigningTags] = useState(false); // Loading state for tag assignment
+  const [isRemovingTags, setIsRemovingTags] = useState(false); // Loading state for tag assignment
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false); // Popup modal state
-  const [messageModalContent, setMessageModalContent] = useState<{ text: string; type: "success" | "error" } | null>(null); // Popup modal content
+  const [messageModalContent, setMessageModalContent] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null); // Popup modal content
 
   const loadData = useCallback(async () => {
     try {
@@ -73,7 +88,6 @@ export default function Dashboard() {
       setGalleries(typesData);
       setTagData(tagsData);
       setSelectedImages(new Set());
-      setTags(tagsData.map((t) => t.name));
     } catch (err) {
       console.error("Error loading data:", err);
       setError("Failed to load data");
@@ -162,30 +176,73 @@ export default function Dashboard() {
     }
   };
 
-  const onAssignTags = async (image_ids: Array<string>, tag_ids: Array<string>) => {
-  try {
-    setIsAssigningTags(true); // Start loading
-    await assign_tags_to_images(image_ids, tag_ids);
-    await loadData(); // Reload data to reflect the changes
+  const onAssignTags = async (
+    image_ids: Array<string>,
+    tag_ids: Array<string>
+  ) => {
+    try {
+      setIsAssigningTags(true); // Start loading
+      await assign_tags_to_images(image_ids, tag_ids);
+      await loadData(); // Reload data to reflect the changes
 
-    // Show success popup modal
-    setMessageModalContent({ text: "Tags assigned successfully!", type: "success" });
-    setIsMessageModalOpen(true);
+      // Show success popup modal
+      setMessageModalContent({
+        text: "Tags assigned successfully!",
+        type: "success",
+      });
+      setIsMessageModalOpen(true);
 
-    // Close the Assign Tags Modal after a short delay (e.g., 2 seconds)
-    setTimeout(() => {
-      setIsShowAssignModal(false); // Close the Assign Tags Modal
-    }, 2000); // 2-second delay
-  } catch (error) {
-    console.error("Error assigning tags:", error);
+      // Close the Assign Tags Modal after a short delay (e.g., 2 seconds)
+      setTimeout(() => {
+        setIsShowAssignModal(false); // Close the Assign Tags Modal
+      }, 2000); // 2-second delay
+    } catch (error) {
+      console.error("Error assigning tags:", error);
 
-    // Show error popup modal
-    setMessageModalContent({ text: "Failed to assign tags. Please try again.", type: "error" });
-    setIsMessageModalOpen(true);
-  } finally {
-    setIsAssigningTags(false); // Stop loading
-  }
-};
+      // Show error popup modal
+      setMessageModalContent({
+        text: "Failed to assign tags. Please try again.",
+        type: "error",
+      });
+      setIsMessageModalOpen(true);
+    } finally {
+      setIsAssigningTags(false); // Stop loading
+    }
+  };
+
+  const onRemoveTags = async (
+    image_ids: Array<string>,
+    tag_ids: Array<string>
+  ) => {
+    try {
+      setIsRemovingTags(true); // Start loading
+      await remove_tags_from_images(image_ids, tag_ids);
+      await loadData(); // Reload data to reflect the changes
+
+      // Show success popup modal
+      setMessageModalContent({
+        text: "Tags removed successfully!",
+        type: "success",
+      });
+      setIsMessageModalOpen(true);
+
+      // Close the Assign Tags Modal after a short delay (e.g., 2 seconds)
+      setTimeout(() => {
+        setIsShowAssignModal(false); // Close the Assign Tags Modal
+      }, 2000); // 2-second delay
+    } catch (error) {
+      console.error("Error removing tags:", error);
+
+      // Show error popup modal
+      setMessageModalContent({
+        text: "Failed to remove tags. Please try again.",
+        type: "error",
+      });
+      setIsMessageModalOpen(true);
+    } finally {
+      setIsRemovingTags(false); // Stop loading
+    }
+  };
 
   const handleBulkDelete = async () => {
     if (!selectedImages.size) return;
@@ -261,13 +318,17 @@ export default function Dashboard() {
                 key={tag.id}
                 className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
                   selectedTagIds.includes(tag.id)
-                    ? `${getTagColor(tag.name)} ring-2 ring-white ring-opacity-80` // Selected tag style
+                    ? `${getTagColor(
+                        tag.name
+                      )} ring-2 ring-white ring-opacity-80` // Selected tag style
                     : `${getTagColor(tag.name)} opacity-70 hover:opacity-100` // Unselected tag style
                 }`}
                 onClick={() => {
                   // Toggle tag selection
                   if (selectedTagIds.includes(tag.id)) {
-                    setSelectedTagIds((prev) => prev.filter((id) => id !== tag.id));
+                    setSelectedTagIds((prev) =>
+                      prev.filter((id) => id !== tag.id)
+                    );
                   } else {
                     setSelectedTagIds((prev) => [...prev, tag.id]);
                   }
@@ -292,13 +353,34 @@ export default function Dashboard() {
             >
               {isAssigningTags ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> {/* Loading spinner */}
+                  <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                  {/* Loading spinner */}
                   Assigning...
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
                   Assign Tags
+                </>
+              )}
+            </button>
+            <button
+              className="flex-1 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+              onClick={async () => {
+                await onRemoveTags(Array.from(selectedImages), selectedTagIds);
+              }}
+              disabled={isRemovingTags} // Disable button while loading
+            >
+              {isRemovingTags ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />{" "}
+                  {/* Loading spinner */}
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Remove Tags
                 </>
               )}
             </button>
@@ -328,7 +410,9 @@ export default function Dashboard() {
               Create New Gallery
             </button>
 
-            <h3 className="text-gray-400 text-sm font-medium mb-2">Galleries</h3>
+            <h3 className="text-gray-400 text-sm font-medium mb-2">
+              Galleries
+            </h3>
             <div className="space-y-1">
               {galleries.map((gallery) => (
                 <GalleryItem
@@ -380,7 +464,9 @@ export default function Dashboard() {
 
                 {/* Quick Add Tags */}
                 <div className="bg-[#1A1F25] rounded-lg p-4 mb-6">
-                  <h3 className="text-white font-medium mb-4">Quick Add Tags</h3>
+                  <h3 className="text-white font-medium mb-4">
+                    Quick Add Tags
+                  </h3>
                   <div className="flex gap-2 mb-4">
                     <input
                       type="text"
@@ -425,7 +511,9 @@ export default function Dashboard() {
                     className="flex items-center gap-2 text-gray-400 hover:text-white"
                   >
                     <Check className="w-4 h-4" />
-                    {selectedImages.size === images.length ? "Deselect All" : "Select All"}
+                    {selectedImages.size === images.length
+                      ? "Deselect All"
+                      : "Select All"}
                   </button>
 
                   {/* Show Assign Tags and Delete Images buttons only when images are selected */}
@@ -439,7 +527,7 @@ export default function Dashboard() {
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                       >
                         <TagIcon className="w-4 h-4" />
-                        Assign Tags ({selectedImages.size})
+                        Change Tags ({selectedImages.size})
                       </button>
                       <button
                         onClick={handleBulkDelete}
@@ -460,7 +548,9 @@ export default function Dashboard() {
                       <div
                         key={image.id}
                         className={`relative group rounded-lg overflow-hidden ${
-                          selectedImages.has(image.id) ? "ring-2 ring-purple-500" : ""
+                          selectedImages.has(image.id)
+                            ? "ring-2 ring-purple-500"
+                            : ""
                         }`}
                       >
                         <img
@@ -471,7 +561,9 @@ export default function Dashboard() {
                         {/* Overlay for the selection button */}
                         <div
                           className={`absolute inset-0 bg-black/50 transition-opacity ${
-                            selectedImages.has(image.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            selectedImages.has(image.id)
+                              ? "opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
                           }`}
                         >
                           <div className="absolute top-2 right-2">
@@ -496,15 +588,19 @@ export default function Dashboard() {
                           <div className="absolute bottom-2 left-2 flex gap-1 z-10">
                             {image.tags.map((tag) => {
                               // Find the tag object from tagData to get the tag name
-                              const tagObject = tagData.find((t) => t.name === tag);
+                              const tagObject = tagData.find(
+                                (t) => t.id === tag.id
+                              );
                               return (
                                 <span
-                                  key={tag}
+                                  key={tag.id}
                                   className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg text-xs text-white ${
-                                    tagObject ? getTagColor(tagObject.name) : "bg-blue-500"
+                                    tagObject
+                                      ? getTagColor(tagObject.name)
+                                      : "bg-blue-500"
                                   }`}
                                 >
-                                  {tag}
+                                  {tag.name}
                                 </span>
                               );
                             })}

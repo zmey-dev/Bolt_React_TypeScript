@@ -52,8 +52,8 @@ export function ImageGrid({
     };
 
     updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
   const breakpointColumns = {
@@ -64,28 +64,40 @@ export function ImageGrid({
 
   // Filter images based on selected gallery type and tags
   const filteredImages = images.filter((image) => {
-    const matchesGalleryType = !selectedGalleryType || image.gallery_type_id === selectedGalleryType.id;
-    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => image.tags?.includes(tag));
+    const matchesGalleryType =
+      !selectedGalleryType || image.gallery_type_id === selectedGalleryType.id;
+    const matchesTags =
+      selectedTags.length === 0 ||
+      selectedTags.some(
+        (tag) =>
+          image.tags?.filter((image_tag) => image_tag.id == tag.id).length
+      );
     return matchesGalleryType && matchesTags;
   });
 
   // Calculate tag counts for current gallery type
   const tagCounts = tags.reduce((acc, tag) => {
-    const count = images.filter(image => 
-      (!selectedGalleryType || image.gallery_type_id === selectedGalleryType.id) && 
-      image.tags?.includes(tag)
+    const count = images.filter(
+      (image) =>
+        (!selectedGalleryType ||
+          image.gallery_type_id === selectedGalleryType.id) &&
+        image.tags?.filter((image_tag) => image_tag.id == tag.id).length
     ).length;
-    acc[tag] = count;
+
+    acc[tag.id] = count;
     return acc;
   }, {} as Record<string, number>);
 
   // Calculate total images count for "All" tag
-  const allTagsCount = images.filter(image => 
-    !selectedGalleryType || image.gallery_type_id === selectedGalleryType.id
+  const allTagsCount = images.filter(
+    (image) =>
+      !selectedGalleryType || image.gallery_type_id === selectedGalleryType.id
   ).length;
 
   // Calculate column width
-  const columnWidth = Math.floor((containerWidth - (columnCount - 1) * 16) / columnCount);
+  const columnWidth = Math.floor(
+    (containerWidth - (columnCount - 1) * 16) / columnCount
+  );
 
   // Arrange images into columns manually
   const columns = Array.from({ length: columnCount }, () => []);
@@ -111,25 +123,27 @@ export function ImageGrid({
             All ({allTagsCount})
           </button>
 
-          {tags.map((tag) => (
-            <button
-              key={`tag-${tag}`}
-              onClick={() => {
-                if (selectedTags.includes(tag)) {
-                  onSelectTags(selectedTags.filter(t => t !== tag));
-                } else {
-                  onSelectTags([...selectedTags, tag]);
-                }
-              }}
-              className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
-                selectedTags.includes(tag)
-                  ? "bg-purple-600 text-white"
-                  : `${getTagColor(tag)} hover:opacity-80`
-              }`}
-            >
-              {tag} ({tagCounts[tag] || 0})
-            </button>
-          ))}
+          {tags
+            .filter((tag) => tag.gallery_type_id == selectedGalleryType.id)
+            .map((tag) => (
+              <button
+                key={`tag-${tag.id}`}
+                onClick={() => {
+                  if (selectedTags.includes(tag)) {
+                    onSelectTags(selectedTags.filter((t) => t !== tag));
+                  } else {
+                    onSelectTags([...selectedTags, tag]);
+                  }
+                }}
+                className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+                  selectedTags.includes(tag)
+                    ? "bg-purple-600 text-white"
+                    : `${getTagColor(tag)} hover:opacity-80`
+                }`}
+              >
+                {tag.name} ({tagCounts[tag.id] || 0})
+              </button>
+            ))}
         </div>
 
         {/* Column Selector */}
@@ -173,7 +187,7 @@ export function ImageGrid({
                   <div
                     key={`image-${image.id}`}
                     className="mb-4 relative group overflow-hidden rounded-lg"
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                     onClick={() => {
                       setImageUrl(image.url);
                       setIsOpen(true);

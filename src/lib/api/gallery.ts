@@ -21,6 +21,7 @@ export async function loadGalleryImages(): Promise<GalleryImage[]> {
         ),
         image_tags (
           tags (
+            id,
             name
           )
         )
@@ -38,7 +39,7 @@ export async function loadGalleryImages(): Promise<GalleryImage[]> {
       ...image,
       gallery_type: image.gallery_types?.name,
       gallery_type_id: image.gallery_types?.id,
-      tags: image.image_tags?.map((it) => it.tags.name) || [],
+      tags: image.image_tags?.map((it) => it.tags) || [],
     }));
   } catch (error) {
     console.error("Gallery fetch error:", error);

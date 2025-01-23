@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSupabase } from "./hooks/useSupabase";
 import { loadGalleryImages, getGalleryTypes } from "./lib/api/gallery";
 import { getTags } from "./lib/api/tags";
@@ -23,6 +19,8 @@ import ImageModal from "./components/ImageModal";
 import type { Image, WishlistItem, QuoteRequest } from "./types";
 
 export default function App() {
+  const location = useLocation();
+
   const [authenticated, setAuthenticated] = useState(false);
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [images, setImages] = useState<Image[]>([]);
@@ -59,7 +57,7 @@ export default function App() {
         }
       );
     }
-  }, [initialized, authenticated]);
+  }, [initialized, authenticated, location]);
 
   const handleLogout = useCallback(() => {
     setAuthenticated(false);
