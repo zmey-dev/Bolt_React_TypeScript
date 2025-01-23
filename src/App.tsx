@@ -99,14 +99,17 @@ export default function App() {
   const handleQuoteSubmit = useCallback(async (data: QuoteRequest) => {
     try {
       if (!data.selectedImages || data.selectedImages.length === 0) {
-        throw new Error('Please select at least one design for your quote request');
+        throw new Error(
+          "Please select at least one design for your quote request"
+        );
       }
 
       await submitQuoteRequest(data);
     } catch (err) {
-      const errorMessage = err instanceof Error 
-        ? err.message 
-        : new Error('Failed to submit quote request');
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : new Error("Failed to submit quote request");
       console.error("Error submitting quote:", errorMessage);
       throw new Error(errorMessage);
     }
@@ -129,138 +132,140 @@ export default function App() {
   return (
     <>
       <div className="min-h-screen text-white relative bg-[#260000]">
-        {(location.pathname === '/' && !authenticated) || location.pathname.startsWith('/admin') ? <SnowfallBackground /> : null}
+        {(location.pathname === "/" && !authenticated) ||
+        location.pathname.startsWith("/admin") ? (
+          <SnowfallBackground />
+        ) : null}
         <div className="relative z-20">
-        <Routes>
-          {/* Admin Routes */}
-          <Route path="/admin">
-            <Route index element={<AdminLogin />} /> {/* Keep this for /admin */}
-            <Route path="login" element={<Navigate to="/admin" />} /> {/* Redirect /admin/login to /admin */}
-            <Route
-              path="dashboard"
-              element={
-                <AdminRoute>
-                  <Dashboard />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="access-codes"
-              element={
-                <AdminRoute>
-                  <AccessCodes />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="affiliates"
-              element={
-                <AdminRoute>
-                  <Affiliates />
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="quotes"
-              element={
-                <AdminRoute>
-                  <QuoteRequests />
-                </AdminRoute>
-              }
-            />
-          </Route>
+          <Routes>
+            {/* Admin Routes */}
+            <Route path="/admin">
+              <Route index element={<AdminLogin />} />{" "}
+              {/* Keep this for /admin */}
+              <Route path="login" element={<Navigate to="/admin" />} />{" "}
+              {/* Redirect /admin/login to /admin */}
+              <Route
+                path="dashboard"
+                element={
+                  <AdminRoute>
+                    <Dashboard />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="access-codes"
+                element={
+                  <AdminRoute>
+                    <AccessCodes />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="affiliates"
+                element={
+                  <AdminRoute>
+                    <Affiliates />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="quotes"
+                element={
+                  <AdminRoute>
+                    <QuoteRequests />
+                  </AdminRoute>
+                }
+              />
+            </Route>
 
-          {/* Public Routes */}
-          <Route
-            path="/"
-            element={
-              authenticated ? (
-                <>
-                  <Header
-                    wishlistCount={wishlistItems.length}
-                    onShowHowItWorks={() => setShowHowItWorks(true)}
-                    onShowFAQ={() => setShowFAQ(true)}
-                  />
-                  <main className="pt-[72px] max-w-[1400px] mx-auto">
-                    <ImageGrid
-                      images={images}
-                      wishlistIds={wishlistItems.map((item) => item.id)}
-                      galleryTypes={galleryTypes}
-                      selectedGalleryType={selectedGalleryType}
-                      tags={tags}
-                      selectedTags={selectedTags}
-                      onAddToWishlist={handleAddToWishlist}
-                      onRemoveFromWishlist={handleRemoveFromWishlist}
-                      onLoadMore={() => {}}
-                      setImageUrl={(url: string) => {
-                        const index = images.findIndex(
-                          (img) => img.url === url
-                        );
-                        if (index !== -1) {
-                          setImageModalIndex(index);
-                          setIsOpen(true);
-                        }
-                      }}
-                      setIsOpen={setIsOpen}
-                      onSelectGalleryType={setSelectedGalleryType}
-                      onSelectTags={setSelectedTags}
+            {/* Public Routes */}
+            <Route
+              path="/"
+              element={
+                authenticated ? (
+                  <>
+                    <Header
+                      wishlistCount={wishlistItems.length}
+                      onShowHowItWorks={() => setShowHowItWorks(true)}
+                      onShowFAQ={() => setShowFAQ(true)}
                     />
-                    <ImageModal
-                      images={images}
-                      index={imageModalIndex}
-                      setIndex={setImageModalIndex}
-                      isOpen={isOpen}
-                      onClose={() => setIsOpen(false)}
-                      wishlistIds={wishlistItems.map((item) => item.id)}
-                      onAddToWishlist={handleAddToWishlist}
-                      onRemoveFromWishlist={handleRemoveFromWishlist}
+                    <main className="pt-[72px] max-w-[1400px] mx-auto">
+                      <ImageGrid
+                        images={images}
+                        wishlistIds={wishlistItems.map((item) => item.id)}
+                        galleryTypes={galleryTypes}
+                        selectedGalleryType={selectedGalleryType}
+                        tags={tags}
+                        selectedTags={selectedTags}
+                        onAddToWishlist={handleAddToWishlist}
+                        onRemoveFromWishlist={handleRemoveFromWishlist}
+                        onLoadMore={() => {}}
+                        setImageUrl={(url: string) => {
+                          const index = images.findIndex(
+                            (img) => img.url === url
+                          );
+                          if (index !== -1) {
+                            setImageModalIndex(index);
+                            setIsOpen(true);
+                          }
+                        }}
+                        setIsOpen={setIsOpen}
+                        onSelectGalleryType={setSelectedGalleryType}
+                        onSelectTags={setSelectedTags}
+                      />
+                      <ImageModal
+                        images={images}
+                        index={imageModalIndex}
+                        setIndex={setImageModalIndex}
+                        isOpen={isOpen}
+                        onClose={() => setIsOpen(false)}
+                        wishlistIds={wishlistItems.map((item) => item.id)}
+                        onAddToWishlist={handleAddToWishlist}
+                        onRemoveFromWishlist={handleRemoveFromWishlist}
+                      />
+                    </main>
+                  </>
+                ) : (
+                  <PasswordEntry onAccess={handleAccess} />
+                )
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                authenticated ? (
+                  <>
+                    <Header
+                      wishlistCount={wishlistItems.length}
+                      onShowHowItWorks={() => setShowHowItWorks(true)}
+                      onShowFAQ={() => setShowFAQ(true)}
                     />
-                  </main>
-                </>
-              ) : (
-                <PasswordEntry onAccess={handleAccess} />
-              )
-            }
-          />
-          <Route
-            path="/wishlist"
-            element={
-              authenticated ? (
-                <>
-                  <Header
-                    wishlistCount={wishlistItems.length}
-                    onShowHowItWorks={() => setShowHowItWorks(true)}
-                    onShowFAQ={() => setShowFAQ(true)}
-                  />
-                  <main className="pt-[140px] md:pt-[72px] max-w-[1400px] mx-auto">
-                    <WishlistGrid
-                      items={wishlistItems}
-                      onReorder={setWishlistItems}
-                      onRemove={handleRemoveFromWishlist}
-                      onUpdateNotes={handleUpdateNotes}
-                      onQuoteSubmit={handleQuoteSubmit}
-                    />
-                  </main>
-                </>
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route path="/quote-success" element={<QuoteSuccess />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
+                    <main className="pt-[140px] md:pt-[72px] max-w-[1400px] mx-auto">
+                      <WishlistGrid
+                        items={wishlistItems}
+                        onReorder={setWishlistItems}
+                        onRemove={handleRemoveFromWishlist}
+                        onUpdateNotes={handleUpdateNotes}
+                        onQuoteSubmit={handleQuoteSubmit}
+                      />
+                    </main>
+                  </>
+                ) : (
+                  <Navigate to="/" />
+                )
+              }
+            />
+            <Route path="/quote-success" element={<QuoteSuccess />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </div>
 
         {/* Render modals at root level */}
-        <HowItWorksModal 
+        <HowItWorksModal
           isOpen={showHowItWorks}
           onClose={() => setShowHowItWorks(false)}
         />
-        <FAQModal
-          isOpen={showFAQ}
-          onClose={() => setShowFAQ(false)}
-        />
+        <FAQModal isOpen={showFAQ} onClose={() => setShowFAQ(false)} />
       </div>
       <BackToTopButton />
     </>

@@ -1,9 +1,21 @@
-import React from 'react';
-import { Loader2, AlertCircle, Clock, CheckCircle, XCircle, MoreHorizontal, Trash2, Phone, Download, FileSpreadsheet, FileText } from 'lucide-react';
-import { QuoteRequestModal } from './QuoteRequestModal';
-import { StatusBadge } from './StatusBadge';
-import { formatTimeline, formatBudget } from '../../../../lib/utils/formatters';
-import type { QuoteRequestWithImages } from '../../../../types';
+import React from "react";
+import {
+  Loader2,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  MoreHorizontal,
+  Trash2,
+  Phone,
+  Download,
+  FileSpreadsheet,
+  FileText,
+} from "lucide-react";
+import { QuoteRequestModal } from "./QuoteRequestModal";
+import { StatusBadge } from "./StatusBadge";
+import { formatTimeline, formatBudget } from "../../../../lib/utils/formatters";
+import type { QuoteRequestWithImages } from "../../../../types";
 import { utils as xlsxUtils, writeFile as xlsxWriteFile } from "xlsx"; // Import the xlsx library
 
 interface QuoteRequestsTableProps {
@@ -25,7 +37,7 @@ export function QuoteRequestsTable({
   onSelectQuote,
   onStatusChange,
   onDelete,
-  onCloseModal
+  onCloseModal,
 }: QuoteRequestsTableProps) {
   if (loading) {
     return (
@@ -41,48 +53,61 @@ export function QuoteRequestsTable({
 
     // Define the data for the worksheet
     const rows = [
-      ['Quote Request Details'],
-      ['Date', new Date(quote.created_at).toLocaleDateString()],
-      ['Status', quote.status],
-      [''],
-      ['Contact Information'],
-      ['Name', quote.name],
-      ['Email', quote.email],
-      ['Phone', quote.phone || 'Not provided'],
-      [''],
-      ['Project Details'],
-      ['Timeline', formatTimeline(quote.timeline)],
-      ['Budget', formatBudget(quote.budget)],
-      ['Notes', quote.notes || 'None'],
-      [''],
-      ['Selected Designs'],
+      ["Quote Request Details"],
+      ["Date", new Date(quote.created_at).toLocaleDateString()],
+      ["Status", quote.status],
+      [""],
+      ["Contact Information"],
+      ["Name", quote.name],
+      ["Email", quote.email],
+      ["Phone", quote.phone || "Not provided"],
+      [""],
+      ["Project Details"],
+      ["Timeline", formatTimeline(quote.timeline)],
+      ["Budget", formatBudget(quote.budget)],
+      ["Notes", quote.notes || "None"],
+      [""],
+      ["Selected Designs"],
       // Add headers for the designs table
-      ['Item No.', 'Item Picture', 'Item Name', 'Size (Height)', 'USD/Unit', 'Quantity', 'TOTAL', 'Remark'],
+      [
+        "Item No.",
+        "Item Picture",
+        "Item Name",
+        "Size (Height)",
+        "USD/Unit",
+        "Quantity",
+        "TOTAL",
+        "Remark",
+      ],
     ];
 
     // Add selected designs information
-    if (quote.images && quote.images.length > 0) {
-      quote.images.forEach((image, index) => {
+    if (quote.quote_request_images && quote.quote_request_images.length > 0) {
+      quote.quote_request_images.forEach((image, index) => {
         rows.push([
           `Design ${index + 1}`, // Item No.
-          { f: `HYPERLINK("${image.url}", "${image.url}")` }, // Item Picture (clickable URL)
-          image.title || 'N/A', // Item Name
-          'N/A', // Size (Height) - Replace with actual data if available
-          'N/A', // USD/Unit - Replace with actual data if available
-          'N/A', // Quantity - Replace with actual data if available
-          'N/A', // TOTAL - Replace with actual data if available
-          image.notes || 'None', // Remark
+          {
+            f: `HYPERLINK("${
+              image.url ? image.url : image.gallery_images.url
+            }", "${image.url ? image.url : image.gallery_images.url}")`,
+          }, // Item Picture (clickable URL)
+          image.title || "N/A", // Item Name
+          "N/A", // Size (Height) - Replace with actual data if available
+          "N/A", // USD/Unit - Replace with actual data if available
+          "N/A", // Quantity - Replace with actual data if available
+          "N/A", // TOTAL - Replace with actual data if available
+          image.notes || "None", // Remark
         ]);
       });
     } else {
-      rows.push(['No designs selected']);
+      rows.push(["No designs selected"]);
     }
 
     // Convert the rows to a worksheet
     const worksheet = xlsxUtils.aoa_to_sheet(rows);
 
     // Apply styles to cells
-    const range = xlsxUtils.decode_range(worksheet['!ref'] || 'A1:Z1');
+    const range = xlsxUtils.decode_range(worksheet["!ref"] || "A1:Z1");
     for (let R = range.s.r; R <= range.e.r; R++) {
       for (let C = range.s.c; C <= range.e.c; C++) {
         const cellRef = xlsxUtils.encode_cell({ r: R, c: C });
@@ -93,24 +118,32 @@ export function QuoteRequestsTable({
         if (!cell.s) cell.s = {};
 
         // Headers (first row of each section)
-        if (rows[R][0] && typeof rows[R][0] === 'string' && rows[R][0].includes('Details')) {
+        if (
+          rows[R][0] &&
+          typeof rows[R][0] === "string" &&
+          rows[R][0].includes("Details")
+        ) {
           cell.s = {
             font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
             fill: { fgColor: { rgb: "4F46E5" } },
-            alignment: { horizontal: 'center', vertical: 'center' }
+            alignment: { horizontal: "center", vertical: "center" },
           };
         }
         // Section headers
-        else if (R === 0 || (rows[R][0] && rows[R][0].toString().endsWith(':')) || R === 15) {
+        else if (
+          R === 0 ||
+          (rows[R][0] && rows[R][0].toString().endsWith(":")) ||
+          R === 15
+        ) {
           cell.s = {
             font: { bold: true },
-            fill: { fgColor: { rgb: "F3F4F6" } }
+            fill: { fgColor: { rgb: "F3F4F6" } },
           };
         }
         // Alternating row colors for data
         else if (R > 15 && R % 2 === 0) {
           cell.s = {
-            fill: { fgColor: { rgb: "F9FAFB" } }
+            fill: { fgColor: { rgb: "F9FAFB" } },
           };
         }
 
@@ -118,16 +151,20 @@ export function QuoteRequestsTable({
         if (R > 15 && (C === 0 || C === 3 || C === 4 || C === 5 || C === 6)) {
           cell.s = {
             ...cell.s,
-            alignment: { horizontal: 'center', vertical: 'center' }
+            alignment: { horizontal: "center", vertical: "center" },
           };
         }
 
         // URL styling
-        if (cell.f && cell.f.includes('HYPERLINK')) {
+        if (cell.f && cell.f.includes("HYPERLINK")) {
           cell.s = {
             ...cell.s,
             font: { color: { rgb: "0000FF" }, underline: true },
-            alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+            alignment: {
+              horizontal: "center",
+              vertical: "center",
+              wrapText: true,
+            },
           };
         }
       }
@@ -144,13 +181,13 @@ export function QuoteRequestsTable({
       { wch: 15 }, // Total
       { wch: 40 }, // Remark
     ];
-    worksheet['!cols'] = colWidths;
+    worksheet["!cols"] = colWidths;
 
     // Add the worksheet to the workbook
-    xlsxUtils.book_append_sheet(workbook, worksheet, 'Quote Request');
+    xlsxUtils.book_append_sheet(workbook, worksheet, "Quote Request");
 
     // Set column widths
-    worksheet['!cols'] = [
+    worksheet["!cols"] = [
       { wch: 15 }, // Item No.
       { wch: 50 }, // Item Picture (URL)
       { wch: 30 }, // Item Name
@@ -162,7 +199,9 @@ export function QuoteRequestsTable({
     ];
 
     // Generate the file and trigger download
-    const fileName = `quote-request-${quote.id}-${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `quote-request-${quote.id}-${
+      new Date().toISOString().split("T")[0]
+    }.xlsx`;
     xlsxWriteFile(workbook, fileName);
   };
 
@@ -193,25 +232,41 @@ export function QuoteRequestsTable({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-yellow-400">
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Contact</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Timeline</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Budget</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Contact
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Timeline
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Budget
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {quotes.map(quote => (
-                  <tr 
+                {quotes.map((quote) => (
+                  <tr
                     key={quote.id}
                     className="border-b border-yellow-400/20 hover:bg-[#260000]/30 transition-colors"
                   >
                     <td className="px-6 py-4 text-sm">
                       {new Date(quote.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium">{quote.name}</td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {quote.name}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
                         <p className="text-sm text-gray-300">{quote.email}</p>
@@ -223,8 +278,12 @@ export function QuoteRequestsTable({
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-300">{formatTimeline(quote.timeline)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-300">{formatBudget(quote.budget)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-300">
+                      {formatTimeline(quote.timeline)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-300">
+                      {formatBudget(quote.budget)}
+                    </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={quote.status} />
                     </td>
@@ -246,7 +305,11 @@ export function QuoteRequestsTable({
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm('Are you sure you want to delete this quote request?')) {
+                            if (
+                              confirm(
+                                "Are you sure you want to delete this quote request?"
+                              )
+                            ) {
                               onDelete(quote.id);
                             }
                           }}

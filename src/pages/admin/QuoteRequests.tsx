@@ -1,10 +1,10 @@
-import React from 'react';
-import { AdminNav } from '../../components/AdminNav';
-import { QuoteRequestsTable } from './QuoteRequests/components/QuoteRequestsTable';
-import { useQuoteRequests } from './QuoteRequests/hooks/useQuoteRequests';
+import React from "react";
+import { AdminNav } from "../../components/AdminNav";
+import { QuoteRequestsTable } from "./QuoteRequests/components/QuoteRequestsTable";
+import { useQuoteRequests } from "./QuoteRequests/hooks/useQuoteRequests";
 
 export function QuoteRequests() {
-  const { 
+  const {
     quotes,
     loading,
     error,
@@ -12,7 +12,7 @@ export function QuoteRequests() {
     setSelectedQuote,
     handleStatusChange,
     handleDelete,
-    handleCloseModal
+    handleCloseModal,
   } = useQuoteRequests();
 
   return (

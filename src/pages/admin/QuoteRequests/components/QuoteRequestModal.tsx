@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { X, Phone, Upload, FileSpreadsheet, FileText, Image } from 'lucide-react';
-import { StatusBadge } from './StatusBadge';
-import { formatTimeline, formatBudget } from '../../../../lib/utils/formatters';
-import type { QuoteRequestWithImages } from '../../../../types';
-import * as XLSX from 'xlsx'; // Import the xlsx library
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Phone,
+  Upload,
+  FileSpreadsheet,
+  FileText,
+  Image,
+} from "lucide-react";
+import { StatusBadge } from "./StatusBadge";
+import { formatTimeline, formatBudget } from "../../../../lib/utils/formatters";
+import type { QuoteRequestWithImages } from "../../../../types";
+import * as XLSX from "xlsx"; // Import the xlsx library
 
 interface QuoteRequestModalProps {
   quote: QuoteRequestWithImages;
@@ -11,7 +18,11 @@ interface QuoteRequestModalProps {
   onStatusChange: (id: string, status: string) => void;
 }
 
-export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteRequestModalProps) {
+export function QuoteRequestModal({
+  quote,
+  onClose,
+  onStatusChange,
+}: QuoteRequestModalProps) {
   const [localStatus, setLocalStatus] = useState(quote.status);
 
   // Update local status when the quote prop changes
@@ -32,49 +43,57 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
 
     // Define the data for the worksheet
     const rows = [
-      ['Quote Request Details'],
-      ['Date', new Date(quote.created_at).toLocaleDateString()],
-      ['Status', quote.status],
-      [''],
-      ['Contact Information'],
-      ['Name', quote.name],
-      ['Email', quote.email],
-      ['Phone', quote.phone || 'Not provided'],
-      [''],
-      ['Project Details'],
-      ['Timeline', formatTimeline(quote.timeline)],
-      ['Budget', formatBudget(quote.budget)],
-      ['Notes', quote.notes || 'None'],
-      [''],
-      ['Selected Designs'],
+      ["Quote Request Details"],
+      ["Date", new Date(quote.created_at).toLocaleDateString()],
+      ["Status", quote.status],
+      [""],
+      ["Contact Information"],
+      ["Name", quote.name],
+      ["Email", quote.email],
+      ["Phone", quote.phone || "Not provided"],
+      [""],
+      ["Project Details"],
+      ["Timeline", formatTimeline(quote.timeline)],
+      ["Budget", formatBudget(quote.budget)],
+      ["Notes", quote.notes || "None"],
+      [""],
+      ["Selected Designs"],
       // Add headers for the designs table
-      ['Item No.', 'Item Picture', 'Item Name', 'Size (Height)', 'USD/Unit', 'Quantity', 'TOTAL', 'Remark'],
+      [
+        "Item No.",
+        "Item Picture",
+        "Item Name",
+        "Size (Height)",
+        "USD/Unit",
+        "Quantity",
+        "TOTAL",
+        "Remark",
+      ],
     ];
 
     // Add selected designs information
-    if (quote.images && quote.images.length > 0) {
-      quote.images.forEach((image, index) => {
+    if (quote.quote_request_images && quote.quote_request_images.length > 0) {
+      quote.quote_request_images.forEach((image, index) => {
         rows.push([
           `Design ${index + 1}`, // Item No.
           { f: `HYPERLINK("${image.url}", "${image.url}")` }, // Item Picture (clickable URL)
-          image.title || 'N/A', // Item Name
-          'N/A', // Size (Height) - Replace with actual data if available
-          'N/A', // USD/Unit - Replace with actual data if available
-          'N/A', // Quantity - Replace with actual data if available
-          'N/A', // TOTAL - Replace with actual data if available
-          image.notes || 'None', // Remark
+          image.title || "N/A", // Item Name
+          "N/A", // Size (Height) - Replace with actual data if available
+          "N/A", // USD/Unit - Replace with actual data if available
+          "N/A", // Quantity - Replace with actual data if available
+          "N/A", // TOTAL - Replace with actual data if available
+          image.notes || "None", // Remark
         ]);
       });
     } else {
-      rows.push(['No designs selected']);
+      rows.push(["No designs selected"]);
     }
 
     // Convert the rows to a worksheet
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
 
-
     // Apply formatting
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z1');
+    const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1:Z1");
     for (let row = range.s.r; row <= range.e.r; row++) {
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
@@ -86,7 +105,7 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
           cell.s = {
             font: { bold: true, color: { rgb: "FFFFFF" } },
             fill: { fgColor: { rgb: "4F46E5" } },
-            alignment: { horizontal: "center", vertical: "center" }
+            alignment: { horizontal: "center", vertical: "center" },
           };
         }
 
@@ -94,7 +113,7 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
         if (row > 0 && row % 2 === 0) {
           cell.s = {
             ...cell.s,
-            fill: { fgColor: { rgb: "F3F4F6" } }
+            fill: { fgColor: { rgb: "F3F4F6" } },
           };
         }
 
@@ -102,25 +121,29 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
         if (col === 0 || col === 3 || col === 4 || col === 5 || col === 6) {
           cell.s = {
             ...cell.s,
-            alignment: { horizontal: "center", vertical: "center" }
+            alignment: { horizontal: "center", vertical: "center" },
           };
         }
 
         // Hyperlink styling (blue and underlined)
-        if (typeof cell.f === 'string' && cell.f.includes('HYPERLINK')) {
+        if (typeof cell.f === "string" && cell.f.includes("HYPERLINK")) {
           cell.s = {
             ...cell.s,
             font: { color: { rgb: "0000FF" }, underline: true },
-            alignment: { horizontal: "center", vertical: "center", wrapText: true }
+            alignment: {
+              horizontal: "center",
+              vertical: "center",
+              wrapText: true,
+            },
           };
         }
       }
     }
 
     // Add the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Quote Request');
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Quote Request");
     // Get worksheet range once
-    const wsRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z1');
+    const wsRange = XLSX.utils.decode_range(worksheet["!ref"] || "A1:Z1");
 
     // Apply styles to all cells
     for (let row = wsRange.s.r; row <= wsRange.e.r; row++) {
@@ -133,47 +156,61 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
         if (!cell.s) cell.s = {};
 
         // Apply styles based on row content and position
-        if (rows[row][0] && typeof rows[row][0] === 'string' && rows[row][0].includes('Details')) {
+        if (
+          rows[row][0] &&
+          typeof rows[row][0] === "string" &&
+          rows[row][0].includes("Details")
+        ) {
           cell.s = {
             font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
             fill: { fgColor: { rgb: "4F46E5" } },
-            alignment: { horizontal: 'center', vertical: 'center' }
+            alignment: { horizontal: "center", vertical: "center" },
           };
-        }
-        else if (row === 0 || (rows[row][0] && rows[row][0].toString().endsWith(':')) || row === 15) {
+        } else if (
+          row === 0 ||
+          (rows[row][0] && rows[row][0].toString().endsWith(":")) ||
+          row === 15
+        ) {
           cell.s = {
             font: { bold: true },
-            fill: { fgColor: { rgb: "F3F4F6" } }
+            fill: { fgColor: { rgb: "F3F4F6" } },
           };
         }
         // Alternating row colors for data
         else if (row > 15 && row % 2 === 0) {
           cell.s = {
-            fill: { fgColor: { rgb: "F9FAFB" } }
+            fill: { fgColor: { rgb: "F9FAFB" } },
           };
         }
 
         // Center align specific columns in the designs table
-        if (row > 15 && (col === 0 || col === 3 || col === 4 || col === 5 || col === 6)) {
+        if (
+          row > 15 &&
+          (col === 0 || col === 3 || col === 4 || col === 5 || col === 6)
+        ) {
           cell.s = {
             ...cell.s,
-            alignment: { horizontal: 'center', vertical: 'center' }
+            alignment: { horizontal: "center", vertical: "center" },
           };
         }
 
         // URL styling
-        if (cell.f && cell.f.includes('HYPERLINK')) {
+        if (cell.f && cell.f.includes("HYPERLINK")) {
           cell.s = {
             ...cell.s,
             font: { color: { rgb: "0000FF" }, underline: true },
-            alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+            alignment: {
+              horizontal: "center",
+              vertical: "center",
+              wrapText: true,
+            },
           };
         }
       }
     }
 
     // Set column widths after applying styles
-    worksheet['!cols'] = [
+    worksheet["!cols"] = [
       { wch: 15 }, // Item No.
       { wch: 50 }, // Item Picture (URL)
       { wch: 30 }, // Item Name
@@ -185,14 +222,19 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
     ];
 
     // Generate the file and trigger download
-    const fileName = `quote-request-${quote.id}-${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `quote-request-${quote.id}-${
+      new Date().toISOString().split("T")[0]
+    }.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm"
+          onClick={onClose}
+        />
 
         <div className="relative w-full max-w-4xl bg-[#260000] rounded-lg shadow-xl border border-yellow-400/20">
           <div className="flex items-center justify-between p-6 border-b border-yellow-400/20">
@@ -218,7 +260,9 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-lg font-medium text-white mb-4">Contact Information</h3>
+                <h3 className="text-lg font-medium text-white mb-4">
+                  Contact Information
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-400">Name</p>
@@ -241,11 +285,15 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-white mb-4">Project Details</h3>
+                <h3 className="text-lg font-medium text-white mb-4">
+                  Project Details
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-400">Timeline</p>
-                    <p className="text-white">{formatTimeline(quote.timeline)}</p>
+                    <p className="text-white">
+                      {formatTimeline(quote.timeline)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Budget</p>
@@ -269,39 +317,47 @@ export function QuoteRequestModal({ quote, onClose, onStatusChange }: QuoteReque
             )}
 
             {/* Selected Images */}
-            {quote.images && quote.images.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-                  <Image className="w-5 h-5 text-yellow-400" />
-                  Selected Designs
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {quote.images.map((image) => (
-                    <div key={image.id} className="bg-[#1f1f1f] rounded-lg overflow-hidden border border-yellow-400/20">
-                      <div className="relative aspect-video">
-                        <img
-                          src={image.url}
-                          alt={image.title || ''}
-                          className="w-full h-full object-cover"
-                        />
-                        {image.isCustomUpload && (
-                          <div className="absolute top-2 left-2 bg-purple-600/80 text-white px-2 py-1 rounded-lg text-sm flex items-center gap-1">
-                            <Upload className="w-3 h-3" />
-                            Custom Upload
-                          </div>
-                        )}
+            {quote.quote_request_images &&
+              quote.quote_request_images.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                    <Image className="w-5 h-5 text-yellow-400" />
+                    Selected Designs
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {quote.quote_request_images.map((image) => (
+                      <div
+                        key={image.id}
+                        className="bg-[#1f1f1f] rounded-lg overflow-hidden border border-yellow-400/20"
+                      >
+                        <div className="relative aspect-video">
+                          <img
+                            src={
+                              image.url ? image.url : image.gallery_images.url
+                            }
+                            alt={image.title || ""}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.isCustomUpload && (
+                            <div className="absolute top-2 left-2 bg-purple-600/80 text-white px-2 py-1 rounded-lg text-sm flex items-center gap-1">
+                              <Upload className="w-3 h-3" />
+                              Custom Upload
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <p className="text-sm text-gray-400 mb-2">
+                            Design Notes
+                          </p>
+                          <p className="text-white bg-[#260000] rounded-lg p-3 text-sm break-words whitespace-pre-wrap overflow-auto max-h-40 border border-yellow-400/20">
+                            {image.notes || "No notes provided"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="p-4">
-                        <p className="text-sm text-gray-400 mb-2">Design Notes</p>
-                        <p className="text-white bg-[#260000] rounded-lg p-3 text-sm break-words whitespace-pre-wrap overflow-auto max-h-40 border border-yellow-400/20">
-                          {image.notes || 'No notes provided'}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Status Section */}
