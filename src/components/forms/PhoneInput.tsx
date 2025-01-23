@@ -63,7 +63,7 @@ export function PhoneInput({ name = 'phone', required = false }: PhoneInputProps
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="h-[42px] flex items-center gap-2 bg-gray-800 border-2 border-gray-700 rounded-l-lg px-3 focus:outline-none focus:border-purple-500 hover:bg-gray-700 transition-colors min-w-[120px]"
+            className="h-[50px] flex items-center gap-2 bg-[#1f1f1f] border-2 border-yellow-400/20 rounded-l-lg px-3 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 hover:bg-[#2a2a2a] transition-colors min-w-[120px]"
           >
             <CountryFlag countryCode={selectedCountry.code} />
             <span className="text-white text-sm">{selectedCountry.prefix}</span>
@@ -114,7 +114,7 @@ export function PhoneInput({ name = 'phone', required = false }: PhoneInputProps
           type="tel"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
-          className="flex-1 h-[42px] bg-gray-800 text-white border-2 border-l-0 border-gray-700 rounded-r-lg px-4 focus:outline-none focus:border-purple-500"
+          className="flex-1 h-[50px] bg-[#1f1f1f] text-white border-2 border-l-0 border-yellow-400/20 rounded-r-lg px-4 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20"
           placeholder="(555) 123-4567"
         />
 

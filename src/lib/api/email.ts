@@ -3,28 +3,28 @@ import type { QuoteRequest } from "../../types";
 
 const ADMIN_EMAIL = "dudesonwill@gmail.com";
 
-async function sendBrevoEmail(data: {
-  to: { email: string }[];
-  sender: { name: string; email: string };
+async function sendBrevoEmail(data: { 
+  recipient_email: string;
   subject: string;
-  htmlContent: string;
-}) {
-  const response = await fetch("http://localhost:3000/send-email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: data.sender.email,
+  content: string;
+}): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase client not initialized');
+
+  // Store email in notifications table
+  const { error } = await supabase
+    .from('email_notifications')
+    .insert({
+      recipient_email: data.recipient_email,
       subject: data.subject,
-      text: data.htmlContent,
-    }),
-  });
+      content: data.content,
+      status: 'pending'
+    });
 
-  const data1 = await response.json();
-  console.log("Email sent successfully:", data1);
-
-  return response.json();
+  if (error) {
+    console.error('Failed to queue email notification:', error);
+    throw error;
+  }
 }
 
 export async function sendQuoteNotification(data: QuoteRequest) {
@@ -32,36 +32,11 @@ export async function sendQuoteNotification(data: QuoteRequest) {
   if (!supabase) throw new Error("Supabase client not initialized");
 
   try {
-    // Store email in sent_emails table first
-    // const { error: dbError } = await supabase.from("sent_emails").insert({
-    //   access_code_id: access_code.id,
-    //   recipient_email: ADMIN_EMAIL,
-    //   subject: `New Quote Request from ${data.name}`,
-    //   body: formatQuoteEmail(data),
-    //   sent_by: data.email,
-    //   status: "pending",
-    // });
-    // console.log(access_code);
-
-    // if (dbError) throw dbError;
-
-    // Send email via Brevo API
     await sendBrevoEmail({
-      to: "dudesonwill@gmail.com",
-      sender: {
-        name: "LightShowVault",
-        email: data.email,
-      },
+      recipient_email: "dudesonwill@gmail.com",
       subject: `New Quote Request from ${data.name}`,
-      htmlContent: formatQuoteEmail(data),
+      content: formatQuoteEmail(data)
     });
-
-    // Update email status to sent
-    await supabase
-      .from("sent_emails")
-      .update({ status: "sent", sent_at: new Date().toISOString() })
-      .eq("recipient_email", ADMIN_EMAIL)
-      .eq("status", "pending");
 
     return true;
   } catch (error) {

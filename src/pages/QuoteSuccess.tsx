@@ -32,7 +32,7 @@ export function QuoteSuccess() {
             
             <div className="flex items-center justify-center gap-2 text-purple-400">
               <Calendar className="w-5 h-5" />
-              <p>We'll get back to you within a week</p>
+              <p>We'll get back to you within a 1-2 weeks.</p>
             </div>
 
             <p className="text-gray-400 text-sm">

@@ -66,7 +66,7 @@ export function GalleryItem({
         isEditing
           ? "bg-gray-800"
           : isSelected
-          ? "bg-purple-600 text-white"
+          ? "bg-yellow-400 text-[#260000] font-medium"
           : "text-gray-300 hover:bg-gray-700"
       } ${isLoading ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}
     >

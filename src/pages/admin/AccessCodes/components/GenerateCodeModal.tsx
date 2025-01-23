@@ -1,22 +1,37 @@
-import React, { useState } from 'react';
-import { Loader2, X, Dice6 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Loader2, X, Dice6, Hash } from 'lucide-react';
 
 interface GenerateCodeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedRequest?: AccessCodeRequest | null;
   onGenerate: (data: {
-    code?: string;
     description?: string;
     expiresAt?: string | null;
   }) => Promise<void>;
   isGenerating: boolean;
 }
 
+interface AccessCodeRequest {
+  id: string;
+  company_name: string;
+  contact_name: string;
+  email: string;
+  phone?: string;
+  project_type: string;
+  estimated_budget: string;
+  timeline: string;
+  additional_info?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
 export function GenerateCodeModal({ 
   isOpen, 
   onClose, 
+  selectedRequest,
   onGenerate,
-  isGenerating 
+  isGenerating,
 }: GenerateCodeModalProps) {
   const [description, setDescription] = useState('');
   const [durationType, setDurationType] = useState<'unlimited' | 'days' | 'custom'>('unlimited');
@@ -24,6 +39,25 @@ export function GenerateCodeModal({
   const [expirationDate, setExpirationDate] = useState('');
   const [customCode, setCustomCode] = useState('');
   const [useCustomCode, setUseCustomCode] = useState(false);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setDescription('');
+      setDurationType('unlimited');
+      setDays('7');
+      setExpirationDate('');
+      setCustomCode('');
+      setUseCustomCode(false);
+      
+      // If we have a selected request, pre-fill the description
+      if (selectedRequest) {
+        setDescription(
+          `Access code for ${selectedRequest.company_name} - ${selectedRequest.project_type} project`
+        );
+      }
+    }
+  }, [isOpen, selectedRequest]);
 
   const generateRandomCode = () => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -43,19 +77,24 @@ export function GenerateCodeModal({
       expiresAt = expirationDate;
     }
 
-    await onGenerate({
+    const success = await onGenerate({
       code: useCustomCode ? customCode : undefined,
       description: description || undefined,
       expiresAt
     });
 
-    // Reset form
-    setDescription('');
-    setDurationType('unlimited');
-    setDays('7');
-    setExpirationDate('');
-    setCustomCode('');
-    setUseCustomCode(false);
+    if (success) {
+      // Reset form
+      setDescription('');
+      setDurationType('unlimited');
+      setDays('7');
+      setExpirationDate('');
+      setCustomCode('');
+      setUseCustomCode(false);
+      
+      // Close modal
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -63,17 +102,17 @@ export function GenerateCodeModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div 
-          className="fixed inset-0 bg-black/75 backdrop-blur-sm"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
         
-        <div className="relative w-full max-w-md bg-gray-900 rounded-lg shadow-xl">
-          <div className="flex items-center justify-between p-4 border-b border-gray-800">
-            <h2 className="text-lg font-semibold text-white">Generate Access Code</h2>
+        <div className="relative w-full max-w-md bg-[#260000] rounded-lg shadow-xl border border-yellow-400/20">
+          <div className="flex items-center justify-between p-4 border-b border-yellow-400/20">
+            <div className="flex items-center gap-2">
+              <Hash className="w-5 h-5 text-yellow-400" />
+              <h2 className="text-lg font-semibold text-white">Generate Access Code</h2>
+            </div>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-1 hover:bg-[#3b0000] rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -94,14 +133,14 @@ export function GenerateCodeModal({
                     setUseCustomCode(true);
                   }}
                   placeholder="Enter 6-digit code"
-                  className="flex-1 bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500 font-mono text-center tracking-wider"
+                  className="flex-1 bg-[#1f1f1f] text-white border-2 border-yellow-400/20 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-colors font-mono text-center tracking-wider"
                   maxLength={6}
                   pattern="\d{6}"
                 />
                 <button
                   type="button"
                   onClick={generateRandomCode}
-                  className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                  className="px-3 py-2 bg-[#1f1f1f] hover:bg-[#3b0000] text-white rounded-lg transition-colors flex items-center gap-2 border border-yellow-400/20"
                 >
                   <Dice6 className="w-4 h-4" />
                   Random
@@ -118,7 +157,7 @@ export function GenerateCodeModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Who is this code for?"
-                className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500"
+                className="w-full bg-[#1f1f1f] text-white border-2 border-yellow-400/20 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-colors"
               />
             </div>
 
@@ -129,7 +168,7 @@ export function GenerateCodeModal({
               <select
                 value={durationType}
                 onChange={(e) => setDurationType(e.target.value as 'unlimited' | 'days' | 'custom')}
-                className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500"
+                className="w-full bg-[#1f1f1f] text-white border-2 border-yellow-400/20 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-colors"
               >
                 <option value="unlimited">Never expires</option>
                 <option value="days">Expires in days</option>
@@ -144,7 +183,7 @@ export function GenerateCodeModal({
                     onChange={(e) => setDays(e.target.value)}
                     min="1"
                     max="365"
-                    className="w-24 bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500"
+                    className="w-24 bg-[#1f1f1f] text-white border-2 border-yellow-400/20 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-colors"
                     required
                   />
                   <span className="flex items-center text-gray-400">days</span>
@@ -158,7 +197,7 @@ export function GenerateCodeModal({
                     value={expirationDate}
                     onChange={(e) => setExpirationDate(e.target.value)}
                     min={new Date().toISOString().slice(0, 16)}
-                    className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#1f1f1f] text-white border-2 border-yellow-400/20 rounded-lg px-3 py-2 focus:outline-none focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/20 transition-colors"
                     required
                   />
                 </div>
@@ -169,22 +208,25 @@ export function GenerateCodeModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-[#1f1f1f] hover:bg-[#3b0000] text-white rounded-lg transition-colors border border-yellow-400/20"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isGenerating || (useCustomCode && customCode.length !== 6)}
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 text-white px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-400/70 text-[#260000] px-4 py-2 rounded-lg transition-colors font-medium shadow-lg hover:shadow-yellow-400/25"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#260000]" />
                     Generating...
                   </>
                 ) : (
-                  'Generate Code'
+                  <>
+                    <Hash className="w-4 h-4 text-[#260000]" />
+                    Generate Code
+                  </>
                 )}
               </button>
             </div>

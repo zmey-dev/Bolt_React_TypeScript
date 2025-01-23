@@ -22,6 +22,6 @@ export function validateEnv() {
   
   if (missing.length > 0) {
     const vars = missing.map(([key]) => key).join(', ');
-    throw new Error(`Missing environment variables: ${vars}. Please click "Connect to Supabase" to set up your connection.`);
+    throw new Error(`Missing environment variables: ${vars}. Please check your .env file.`);
   }
 }

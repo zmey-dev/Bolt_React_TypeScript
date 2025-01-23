@@ -2,10 +2,10 @@ import React from 'react';
 import { Clock, CheckCircle, XCircle, MoreHorizontal } from 'lucide-react';
 
 const STATUS_COLORS = {
-  pending: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  in_progress: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  completed: 'bg-green-500/10 text-green-500 border-green-500/20',
-  rejected: 'bg-red-500/10 text-red-500 border-red-500/20'
+  pending: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+  in_progress: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+  completed: 'bg-green-500/20 text-green-400 border border-green-500/30',
+  rejected: 'bg-red-500/20 text-red-400 border border-red-500/30'
 } as const;
 
 const STATUS_ICONS = {

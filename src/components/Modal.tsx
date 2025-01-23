@@ -6,7 +6,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  title: string;
+  title: React.ReactNode; // Updated to accept React.ReactNode
 }
 
 export function Modal({ isOpen, onClose, children, title }: ModalProps) {
@@ -28,13 +28,16 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-2xl bg-gray-900 rounded-lg shadow-xl"
+            className="relative w-full max-w-2xl bg-[#260000] rounded-lg shadow-xl border border-yellow-400/20"
           >
-            <div className="flex items-center justify-between p-4 border-b border-gray-800">
-              <h2 className="text-xl font-semibold text-white">{title}</h2>
+            <div className="flex items-center justify-between p-4 border-b border-yellow-400/20">
+              {/* Centered title */}
+              <div className="flex-1 flex items-center justify-center">
+                {title}
+              </div>
               <button
                 onClick={onClose}
-                className="p-1 hover:bg-gray-800 rounded-lg transition-colors"
+                className="p-1 hover:bg-[#3b0000] rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

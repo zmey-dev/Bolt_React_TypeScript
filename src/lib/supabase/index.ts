@@ -1,3 +1,12 @@
-export { getSupabaseClient } from './client';
-export { SupabaseError, handleSupabaseError } from './error';
-export type { Database } from '../../types/supabase';
+import { getSupabaseClient, resetSupabaseClient } from './client';
+import { SupabaseError, handleSupabaseError } from './error';
+import type { Database } from '../../types/supabase';
+
+export {
+  getSupabaseClient,
+  resetSupabaseClient,
+  SupabaseError,
+  handleSupabaseError
+};
+
+export type { Database };

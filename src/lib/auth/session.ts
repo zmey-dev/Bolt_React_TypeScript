@@ -2,6 +2,7 @@ import { getSupabaseClient } from '../supabase';
 import { validateCredentials } from './validation';
 import { checkAdminRole } from './roles';
 import { AUTH_ERRORS } from './errors';
+import { TABLES } from '../constants';
 import type { AuthResponse } from './types';
 import { validateEnv } from '../env';
 
@@ -50,8 +51,19 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       };
     }
 
-    const adminCheck = await checkAdminRole();
-    if (!adminCheck.success) {
+    console.log('Auth: User signed in successfully, checking profile...');
+
+    const { data: profile } = await supabase
+      .from(TABLES.PROFILES)
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    console.log('Auth: Profile data:', profile);
+
+    // Check for both admin and super_admin roles
+    if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+      console.log('Auth: User does not have admin privileges');
       // Sign out if not admin
       await supabase.auth.signOut();
       return {
@@ -60,6 +72,7 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       };
     }
 
+    console.log('Auth: Admin access granted');
     return { success: true };
   } catch (error) {
     console.error('Auth error:', error);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSupabase } from "./hooks/useSupabase";
+import { SnowfallBackground } from "./components/SnowfallBackground";
 import { loadGalleryImages, getGalleryTypes } from "./lib/api/gallery";
 import { getTags } from "./lib/api/tags";
 import { submitQuoteRequest } from "./lib/api/quotes";
@@ -8,14 +9,17 @@ import { PasswordEntry } from "./components/PasswordEntry";
 import { ImageGrid } from "./components/ImageGrid";
 import { WishlistGrid } from "./components/WishlistGrid";
 import { Header } from "./components/Header";
-import { AdminHeader } from "./components/AdminHeader";
 import { AdminLogin } from "./pages/admin/Login";
 import Dashboard from "./pages/admin/Dashboard";
 import { AccessCodes } from "./pages/admin/AccessCodes";
+import { Affiliates } from "./pages/admin/Affiliates";
 import { QuoteRequests } from "./pages/admin/QuoteRequests";
 import { QuoteSuccess } from "./pages/QuoteSuccess";
 import { AdminRoute } from "./components/AdminRoute";
 import ImageModal from "./components/ImageModal";
+import { HowItWorksModal } from "./components/HowItWorksModal";
+import { FAQModal } from "./components/FAQModal";
+import { BackToTopButton } from "./components/BackToTopButton";
 import type { Image, WishlistItem, QuoteRequest } from "./types";
 
 export default function App() {
@@ -32,6 +36,8 @@ export default function App() {
   const [selectedGalleryType, setSelectedGalleryType] = useState<string | null>(
     null
   );
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showFAQ, setShowFAQ] = useState(false);
   const [galleryTypes, setGalleryTypes] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
@@ -92,10 +98,17 @@ export default function App() {
 
   const handleQuoteSubmit = useCallback(async (data: QuoteRequest) => {
     try {
+      if (!data.selectedImages || data.selectedImages.length === 0) {
+        throw new Error('Please select at least one design for your quote request');
+      }
+
       await submitQuoteRequest(data);
-    } catch (error) {
-      console.error("Error submitting quote:", error);
-      throw error;
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : new Error('Failed to submit quote request');
+      console.error("Error submitting quote:", errorMessage);
+      throw new Error(errorMessage);
     }
   }, []);
 
@@ -115,11 +128,14 @@ export default function App() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen text-white relative bg-[#260000]">
+        {(location.pathname === '/' && !authenticated) || location.pathname.startsWith('/admin') ? <SnowfallBackground /> : null}
+        <div className="relative z-20">
         <Routes>
           {/* Admin Routes */}
           <Route path="/admin">
-            <Route path="login" element={<AdminLogin />} />
+            <Route index element={<AdminLogin />} /> {/* Keep this for /admin */}
+            <Route path="login" element={<Navigate to="/admin" />} /> {/* Redirect /admin/login to /admin */}
             <Route
               path="dashboard"
               element={
@@ -133,6 +149,14 @@ export default function App() {
               element={
                 <AdminRoute>
                   <AccessCodes />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="affiliates"
+              element={
+                <AdminRoute>
+                  <Affiliates />
                 </AdminRoute>
               }
             />
@@ -154,11 +178,9 @@ export default function App() {
                 <>
                   <Header
                     wishlistCount={wishlistItems.length}
-                    galleryTypes={galleryTypes}
-                    selectedGalleryType={selectedGalleryType}
-                    onSelectGalleryType={setSelectedGalleryType}
+                    onShowHowItWorks={() => setShowHowItWorks(true)}
+                    onShowFAQ={() => setShowFAQ(true)}
                   />
-                  <AdminHeader />
                   <main className="pt-[72px] max-w-[1400px] mx-auto">
                     <ImageGrid
                       images={images}
@@ -207,12 +229,10 @@ export default function App() {
                 <>
                   <Header
                     wishlistCount={wishlistItems.length}
-                    galleryTypes={galleryTypes}
-                    selectedGalleryType={selectedGalleryType}
-                    onSelectGalleryType={setSelectedGalleryType}
+                    onShowHowItWorks={() => setShowHowItWorks(true)}
+                    onShowFAQ={() => setShowFAQ(true)}
                   />
-                  <AdminHeader />
-                  <main className="pt-[72px] max-w-[1400px] mx-auto">
+                  <main className="pt-[140px] md:pt-[72px] max-w-[1400px] mx-auto">
                     <WishlistGrid
                       items={wishlistItems}
                       onReorder={setWishlistItems}
@@ -230,7 +250,19 @@ export default function App() {
           <Route path="/quote-success" element={<QuoteSuccess />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        </div>
+
+        {/* Render modals at root level */}
+        <HowItWorksModal 
+          isOpen={showHowItWorks}
+          onClose={() => setShowHowItWorks(false)}
+        />
+        <FAQModal
+          isOpen={showFAQ}
+          onClose={() => setShowFAQ(false)}
+        />
       </div>
+      <BackToTopButton />
     </>
   );
 }

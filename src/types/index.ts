@@ -1,3 +1,20 @@
+export interface AccessCodeRequest {
+  id: string;
+  company_name: string;
+  contact_name: string;
+  email: string;
+  phone?: string;
+  project_type: string;
+  estimated_budget: string;
+  timeline: string;
+  additional_info?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  notes?: string;
+}
+
 export interface Image {
   id: string;
   title: string;
@@ -39,6 +56,8 @@ export interface QuoteRequestImage {
 export interface QuoteRequest {
   name: string;
   email: string;
+  affiliate_id?: string;
+  access_code_id?: string;
   phone: string;
   timeline: string;
   budget: string;
@@ -57,16 +76,28 @@ export interface AccessCode {
   id: string;
   code: string;
   description?: string;
+  created_by_id: string;
   expires_at?: string;
   created_at: string;
   created_by?: string;
   is_active: boolean;
+  status: 'active' | 'inactive' | 'expired';
   uses_remaining?: number;
   last_used_at?: string;
 }
 
-export interface AdminUser {
+export interface User {
   id: string;
   email: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'affiliate';
+}
+
+export interface AffiliateInvite {
+  id: string;
+  email: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+  created_by: string;
+  status: 'pending' | 'accepted' | 'expired';
 }
