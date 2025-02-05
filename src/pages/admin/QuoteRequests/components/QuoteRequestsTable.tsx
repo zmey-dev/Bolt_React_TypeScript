@@ -88,15 +88,15 @@ export function QuoteRequestsTable({
           `Design ${index + 1}`, // Item No.
           {
             f: `HYPERLINK("${
-              image.url ? image.url : image.gallery_images.url
-            }", "${image.url ? image.url : image.gallery_images.url}")`,
+              image?.url ? image?.url : image?.gallery_images?.url
+            }", "${image?.url ? image?.url : image?.gallery_images?.url}")`,
           }, // Item Picture (clickable URL)
-          image.title || "N/A", // Item Name
+          image?.notes ? image?.notes : image?.gallery_images?.title || "N/A", // Item Name
           "N/A", // Size (Height) - Replace with actual data if available
           "N/A", // USD/Unit - Replace with actual data if available
           "N/A", // Quantity - Replace with actual data if available
           "N/A", // TOTAL - Replace with actual data if available
-          image.notes || "None", // Remark
+          image?.notes ? image?.notes : image?.gallery_images?.title || "None", // Remark
         ]);
       });
     } else {
